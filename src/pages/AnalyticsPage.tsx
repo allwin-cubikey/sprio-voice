@@ -139,7 +139,9 @@ function SentimentAnalysis({ totalCalls }: { totalCalls: number }) {
                                 ))}
                             </Pie>
                             <Tooltip
-                                contentStyle={{ background: '#111', border: '1px solid #222', borderRadius: 8, fontSize: 12 }}
+                                contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 12, color: '#111827', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+                                labelStyle={{ color: '#374151', fontWeight: 600 }}
+                                itemStyle={{ color: '#111827' }}
                                 formatter={(v: any) => [`${v}%`, 'Share']}
                             />
                         </PieChart>

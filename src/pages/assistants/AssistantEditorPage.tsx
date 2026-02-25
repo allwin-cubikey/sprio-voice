@@ -280,19 +280,10 @@ export function AssistantEditorPage() {
             {/* Tab: Voice */}
             <TabPanel active={activeTab === 1}>
                 <div className="space-y-5">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="form-group">
-                            <label className="form-label">Voice Provider</label>
-                            <select className="input" value={form.voiceProvider} onChange={e => set('voiceProvider', e.target.value)}>
-                                {['elevenlabs', 'deepgram', 'playht', 'rime', 'azure', 'cartesia', 'openai'].map(p => (
-                                    <option key={p} value={p} className="capitalize">{p}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label flex justify-between"><span>Voice Speed</span><span className="text-accent font-mono">{form.voiceSpeed}x</span></label>
-                            <input type="range" min="0.5" max="2" step="0.05" value={form.voiceSpeed} onChange={e => set('voiceSpeed', parseFloat(e.target.value))} className="w-full accent-accent mt-3" />
-                        </div>
+                    <div className="form-group max-w-sm">
+                        <label className="form-label flex justify-between"><span>Voice Speed</span><span className="text-accent font-mono">{form.voiceSpeed}x</span></label>
+                        <input type="range" min="0.5" max="2" step="0.05" value={form.voiceSpeed} onChange={e => set('voiceSpeed', parseFloat(e.target.value))} className="w-full accent-accent mt-3" />
+                        <div className="flex justify-between text-[10px] text-text-muted mt-1"><span>Slower (0.5x)</span><span>Faster (2x)</span></div>
                     </div>
                     <div className="form-group">
                         <label className="form-label">Voice Selection</label>
@@ -307,7 +298,7 @@ export function AssistantEditorPage() {
                                         <span className="text-sm font-medium text-text-primary">{voice.name}</span>
                                         {form.voiceId === voice.id && <WaveformVisualizer active bars={4} size="sm" />}
                                     </div>
-                                    <p className="text-[10px] text-text-muted">{voice.provider} · {voice.gender} · {voice.accent}</p>
+                                    <p className="text-[10px] text-text-muted">{voice.gender} · {voice.accent}</p>
                                 </button>
                             ))}
                         </div>

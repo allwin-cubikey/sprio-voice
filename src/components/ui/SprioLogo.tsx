@@ -8,16 +8,10 @@ interface SprioLogoProps {
     variant?: 'full' | 'mark';
 }
 
-/**
- * Sprio brand logo — matches the provided brand image exactly.
- * White bold "spri" text with a thick magenta ring for the "o".
- * Renders using actual browser font so it matches the real logo weight.
- */
-export function SprioLogo({ height = 28, className, variant = 'mark' }: SprioLogoProps) {
-    // Scale all dimensions proportionally from height
-    const fontSize = Math.round(height * 1.35);
-    const ringSize = Math.round(height * 0.92);
-    const ringStroke = Math.round(height * 0.26);
+export function SprioLogo({ height = 28, className, variant = 'full' }: SprioLogoProps) {
+    const fontSize = Math.round(height * 1.4);
+    const ringSize = Math.round(height * 0.9);
+    const ringStroke = Math.round(height * 0.25);
 
     if (variant === 'mark') {
         return (
@@ -48,9 +42,7 @@ export function SprioLogo({ height = 28, className, variant = 'mark' }: SprioLog
                 userSelect: 'none',
             }}
         >
-            {/* "spri" — white, will appear invisible on white backgrounds but great on dark */}
             <span style={{ display: 'inline-block' }}>spri</span>
-            {/* "o" — magenta ring matching the brand */}
             <div
                 style={{
                     width: ringSize,
@@ -59,8 +51,6 @@ export function SprioLogo({ height = 28, className, variant = 'mark' }: SprioLog
                     border: `${ringStroke}px solid #CC00CC`,
                     boxSizing: 'border-box',
                     flexShrink: 0,
-                    // Vertically center with the text cap-height
-                    marginTop: Math.round(height * 0.01),
                 }}
             />
         </div>

@@ -7,7 +7,7 @@ import { WaveformVisualizer } from '@/components/ui/index';
 import { clsx } from 'clsx';
 import { delay } from '@/store';
 
-const TABS = ['Model', 'Voice', 'Transcriber'];
+const TABS = ['Knowledge Base', 'Voice Library'];
 
 const LLM_MODELS: Record<LLMProvider, string[]> = {
     openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],

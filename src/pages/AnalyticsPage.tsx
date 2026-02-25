@@ -3,15 +3,45 @@ import {
     AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { Download, TrendingUp, Clock, PhoneCall, DollarSign, CheckCircle } from 'lucide-react';
+import { Download, TrendingUp, Clock, PhoneCall, DollarSign, CheckCircle, MessageSquare } from 'lucide-react';
 import { generateAnalyticsData } from '@/data/mockData';
 import { useCallStore, useAssistantStore } from '@/store';
 import { clsx } from 'clsx';
+import { subDays, format } from 'date-fns';
 
 const { days, hourlyData } = generateAnalyticsData();
 const PIE_COLORS = ['#22c55e', '#ef4444', '#f59e0b'];
 
 const PRESETS = ['Today', '7 days', '30 days', '90 days'];
+
+// ── Sentiment / Topic data ────────────────────────────────────────────────────
+const SENTIMENT_TOPICS = [
+    { label: 'Payment Issues', key: 'payment', pct: 28, color: '#ef4444', emoji: '💳' },
+    { label: 'Billing Queries', key: 'billing', pct: 22, color: '#f59e0b', emoji: '🧾' },
+    { label: 'Technical Issues', key: 'technical', pct: 18, color: '#6366f1', emoji: '🔧' },
+    { label: 'General Support', key: 'general', pct: 15, color: '#22c55e', emoji: '💬' },
+    { label: 'Failed Calls', key: 'failed', pct: 10, color: '#dc2626', emoji: '❌' },
+    { label: 'Costly / Overcharge', key: 'costly', pct: 7, color: '#8b5cf6', emoji: '💰' },
+];
+
+// 30-day trend per topic
+const sentimentTrend = Array.from({ length: 14 }, (_, i) => {
+    const d = subDays(new Date(), 13 - i);
+    return {
+        date: format(d, 'MMM d'),
+        payment: Math.floor(18 + Math.random() * 20),
+        billing: Math.floor(12 + Math.random() * 16),
+        technical: Math.floor(8 + Math.random() * 14),
+        general: Math.floor(10 + Math.random() * 12),
+        failed: Math.floor(4 + Math.random() * 10),
+        costly: Math.floor(2 + Math.random() * 8),
+    };
+});
+
+const TREND_COLORS: Record<string, string> = {
+    payment: '#ef4444', billing: '#f59e0b', technical: '#6366f1',
+    general: '#22c55e', failed: '#dc2626', costly: '#8b5cf6',
+};
 
 function KpiCard({ title, value, icon: Icon, color, sub }: any) {
     return (
@@ -56,6 +86,173 @@ function HeatmapGrid() {
                         })}
                     </div>
                 ))}
+            </div>
+        </div>
+    );
+}
+
+// ── Sentiment Analysis Section ────────────────────────────────────────────────
+function SentimentAnalysis({ totalCalls }: { totalCalls: number }) {
+    const [activeKey, setActiveKey] = useState<string | null>(null);
+
+    const pieSentiment = SENTIMENT_TOPICS.map(t => ({
+        name: t.label,
+        value: t.pct,
+        color: t.color,
+    }));
+
+    return (
+        <div className="space-y-4">
+            {/* Section header */}
+            <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-violet-500/10">
+                    <MessageSquare className="w-4 h-4 text-violet-400" />
+                </div>
+                <div>
+                    <h2 className="text-base font-semibold text-text-primary">Sentiment Analysis</h2>
+                    <p className="text-xs text-text-muted">User intent and topic breakdown across all calls</p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                {/* Donut chart */}
+                <div className="card p-4">
+                    <h3 className="text-sm font-semibold text-text-primary mb-1">Topic Distribution</h3>
+                    <p className="text-xs text-text-muted mb-3">What users are calling about</p>
+                    <ResponsiveContainer width="100%" height={200}>
+                        <PieChart>
+                            <Pie
+                                data={pieSentiment}
+                                cx="50%" cy="50%"
+                                innerRadius={52} outerRadius={82}
+                                dataKey="value" strokeWidth={0}
+                                paddingAngle={2}
+                                onMouseEnter={(_, i) => setActiveKey(SENTIMENT_TOPICS[i].key)}
+                                onMouseLeave={() => setActiveKey(null)}
+                            >
+                                {pieSentiment.map((entry, i) => (
+                                    <Cell
+                                        key={i}
+                                        fill={entry.color}
+                                        opacity={activeKey === null || activeKey === SENTIMENT_TOPICS[i].key ? 1 : 0.35}
+                                    />
+                                ))}
+                            </Pie>
+                            <Tooltip
+                                contentStyle={{ background: '#111', border: '1px solid #222', borderRadius: 8, fontSize: 12 }}
+                                formatter={(v: any) => [`${v}%`, 'Share']}
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+
+                {/* Percentage bars */}
+                <div className="card p-4">
+                    <h3 className="text-sm font-semibold text-text-primary mb-4">Breakdown by %</h3>
+                    <div className="space-y-3">
+                        {SENTIMENT_TOPICS.map(t => {
+                            const count = Math.round((t.pct / 100) * totalCalls);
+                            return (
+                                <div key={t.key}
+                                    className={clsx('transition-opacity', activeKey && activeKey !== t.key && 'opacity-40')}
+                                    onMouseEnter={() => setActiveKey(t.key)}
+                                    onMouseLeave={() => setActiveKey(null)}
+                                >
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs text-text-secondary flex items-center gap-1.5">
+                                            <span>{t.emoji}</span> {t.label}
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-text-muted">{count} calls</span>
+                                            <span className="text-xs font-bold" style={{ color: t.color }}>{t.pct}%</span>
+                                        </div>
+                                    </div>
+                                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full transition-all duration-500"
+                                            style={{ width: `${t.pct}%`, backgroundColor: t.color }}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Summary table */}
+                <div className="card p-4">
+                    <h3 className="text-sm font-semibold text-text-primary mb-4">Topic Summary</h3>
+                    <table className="w-full text-xs">
+                        <thead>
+                            <tr className="border-b border-border text-text-muted">
+                                <th className="text-left pb-2 font-medium">Topic</th>
+                                <th className="text-right pb-2 font-medium">Calls</th>
+                                <th className="text-right pb-2 font-medium">CSAT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {SENTIMENT_TOPICS.map(t => {
+                                const count = Math.round((t.pct / 100) * totalCalls);
+                                // Simulate CSAT: payment/failed/costly are lower
+                                const csat = t.key === 'failed' ? 42
+                                    : t.key === 'payment' ? 61
+                                        : t.key === 'costly' ? 55
+                                            : t.key === 'billing' ? 70
+                                                : t.key === 'technical' ? 74
+                                                    : 88;
+                                const csatColor = csat >= 75 ? '#22c55e' : csat >= 60 ? '#f59e0b' : '#ef4444';
+                                return (
+                                    <tr key={t.key} className="border-b border-border/50 hover:bg-white/[0.02] transition-colors">
+                                        <td className="py-2.5">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: t.color }} />
+                                                <span className="text-text-secondary truncate">{t.label}</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-2.5 text-right text-text-muted">{count}</td>
+                                        <td className="py-2.5 text-right font-semibold" style={{ color: csatColor }}>{csat}%</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Trend over time */}
+            <div className="card p-4">
+                <h3 className="text-sm font-semibold text-text-primary mb-1">Topic Trend — Last 14 Days</h3>
+                <p className="text-xs text-text-muted mb-4">Volume per call category over time</p>
+                <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={sentimentTrend} margin={{ left: -20 }}>
+                        <defs>
+                            {SENTIMENT_TOPICS.map(t => (
+                                <linearGradient key={t.key} id={`sg_${t.key}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor={t.color} stopOpacity={0.2} />
+                                    <stop offset="95%" stopColor={t.color} stopOpacity={0} />
+                                </linearGradient>
+                            ))}
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                        <XAxis dataKey="date" tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} />
+                        <Tooltip contentStyle={{ background: '#111', border: '1px solid #222', borderRadius: 8, fontSize: 12 }} />
+                        <Legend wrapperStyle={{ fontSize: 11 }} />
+                        {SENTIMENT_TOPICS.map(t => (
+                            <Area
+                                key={t.key}
+                                type="monotone"
+                                dataKey={t.key}
+                                name={t.label}
+                                stroke={t.color}
+                                fill={`url(#sg_${t.key})`}
+                                strokeWidth={1.5}
+                                dot={false}
+                                opacity={activeKey === null || activeKey === t.key ? 1 : 0.2}
+                            />
+                        ))}
+                    </AreaChart>
+                </ResponsiveContainer>
             </div>
         </div>
     );
@@ -176,6 +373,12 @@ export function AnalyticsPage() {
             </div>
 
             <HeatmapGrid />
+
+            {/* ── Sentiment Analysis ─────────────────────────────────────────── */}
+            <div className="border-t border-border pt-5">
+                <SentimentAnalysis totalCalls={calls.length} />
+            </div>
         </div>
     );
 }
+

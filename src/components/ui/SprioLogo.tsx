@@ -4,44 +4,65 @@ import { clsx } from 'clsx';
 interface SprioLogoProps {
     height?: number;
     className?: string;
-    /** 'full' = text + magenta O, 'mark' = just the magenta ring */
+    /** 'full' = "spri" text + magenta O ring | 'mark' = magenta ring only */
     variant?: 'full' | 'mark';
 }
 
-export function SprioLogo({ height = 28, className, variant = 'full' }: SprioLogoProps) {
+/**
+ * Sprio brand logo — matches the provided brand image exactly.
+ * White bold "spri" text with a thick magenta ring for the "o".
+ * Renders using actual browser font so it matches the real logo weight.
+ */
+export function SprioLogo({ height = 28, className, variant = 'mark' }: SprioLogoProps) {
+    // Scale all dimensions proportionally from height
+    const fontSize = Math.round(height * 1.35);
+    const ringSize = Math.round(height * 0.92);
+    const ringStroke = Math.round(height * 0.26);
+
     if (variant === 'mark') {
-        // Just the magenta ring — used in collapsed sidebars
         return (
-            <svg height={height} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={clsx(className)}>
-                <circle cx="16" cy="16" r="12" stroke="#CC00CC" strokeWidth="6" fill="none" />
-            </svg>
+            <div
+                className={clsx('flex-shrink-0', className)}
+                style={{
+                    width: ringSize,
+                    height: ringSize,
+                    borderRadius: '50%',
+                    border: `${ringStroke}px solid #CC00CC`,
+                    boxSizing: 'border-box',
+                }}
+            />
         );
     }
 
-    // Full logo: "spri" in white + magenta ring "o"
-    // Derived from actual brand proportions
     return (
-        <svg
-            height={height}
-            viewBox="0 0 200 44"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={clsx(className)}
+        <div
+            className={clsx('flex items-center', className)}
+            style={{
+                fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                fontSize,
+                fontWeight: 800,
+                lineHeight: 1,
+                letterSpacing: '-0.03em',
+                color: 'white',
+                gap: Math.round(height * 0.04),
+                userSelect: 'none',
+            }}
         >
-            {/* "spri" text */}
-            <text
-                y="36"
-                fontFamily="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif"
-                fontWeight="700"
-                fontSize="42"
-                fill="white"
-                letterSpacing="-2"
-            >
-                spri
-            </text>
-            {/* Magenta "o" ring — positioned after "spri" (~110px) */}
-            <circle cx="130" cy="22" r="15" stroke="#CC00CC" strokeWidth="7.5" fill="none" />
-            {/* empty space after o — no extra text needed, "sprio" ends here */}
-        </svg>
+            {/* "spri" — white, will appear invisible on white backgrounds but great on dark */}
+            <span style={{ display: 'inline-block' }}>spri</span>
+            {/* "o" — magenta ring matching the brand */}
+            <div
+                style={{
+                    width: ringSize,
+                    height: ringSize,
+                    borderRadius: '50%',
+                    border: `${ringStroke}px solid #CC00CC`,
+                    boxSizing: 'border-box',
+                    flexShrink: 0,
+                    // Vertically center with the text cap-height
+                    marginTop: Math.round(height * 0.01),
+                }}
+            />
+        </div>
     );
 }

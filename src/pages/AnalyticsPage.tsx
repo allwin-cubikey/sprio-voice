@@ -9,7 +9,6 @@ import { useCallStore, useAssistantStore } from '@/store';
 import { clsx } from 'clsx';
 import { subDays, format } from 'date-fns';
 
-const { days, hourlyData } = generateAnalyticsData();
 const PIE_COLORS = ['#22c55e', '#ef4444', '#f59e0b'];
 
 const PRESETS = ['Today', '7 days', '30 days', '90 days'];
@@ -23,20 +22,6 @@ const SENTIMENT_TOPICS = [
     { label: 'Failed Calls', key: 'failed', pct: 10, color: '#dc2626', emoji: '❌' },
     { label: 'Costly / Overcharge', key: 'costly', pct: 7, color: '#8b5cf6', emoji: '💰' },
 ];
-
-// 30-day trend per topic
-const sentimentTrend = Array.from({ length: 14 }, (_, i) => {
-    const d = subDays(new Date(), 13 - i);
-    return {
-        date: format(d, 'MMM d'),
-        payment: Math.floor(18 + Math.random() * 20),
-        billing: Math.floor(12 + Math.random() * 16),
-        technical: Math.floor(8 + Math.random() * 14),
-        general: Math.floor(10 + Math.random() * 12),
-        failed: Math.floor(4 + Math.random() * 10),
-        costly: Math.floor(2 + Math.random() * 8),
-    };
-});
 
 const TREND_COLORS: Record<string, string> = {
     payment: '#ef4444', billing: '#f59e0b', technical: '#6366f1',
@@ -59,7 +44,7 @@ function KpiCard({ title, value, icon: Icon, color, sub }: any) {
 }
 
 // Heatmap grid: 24 hours × 7 days
-function HeatmapGrid() {
+function HeatmapGrid({ hourlyData }: { hourlyData: any[] }) {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const maxVal = Math.max(...hourlyData.map(d => d.value));
 
@@ -92,7 +77,7 @@ function HeatmapGrid() {
 }
 
 // ── Sentiment Analysis Section ────────────────────────────────────────────────
-function SentimentAnalysis({ totalCalls }: { totalCalls: number }) {
+function SentimentAnalysis({ totalCalls, sentimentTrend }: { totalCalls: number; sentimentTrend: any[] }) {
     const [activeKey, setActiveKey] = useState<string | null>(null);
 
     const pieSentiment = SENTIMENT_TOPICS.map(t => ({
@@ -265,21 +250,51 @@ export function AnalyticsPage() {
     const { assistants } = useAssistantStore();
     const [preset, setPreset] = useState('30 days');
 
+    const { days, hourlyData, sentimentTrend } = React.useMemo(() => {
+        const { days: generatedDays, hourlyData: generatedHourly } = generateAnalyticsData();
+        const sTrend = Array.from({ length: 14 }, (_, i) => {
+            const d = subDays(new Date(), 13 - i);
+            return {
+                date: format(d, 'MMM d'),
+                payment: Math.floor(18 + Math.random() * 20),
+                billing: Math.floor(12 + Math.random() * 16),
+                technical: Math.floor(8 + Math.random() * 14),
+                general: Math.floor(10 + Math.random() * 12),
+                failed: Math.floor(4 + Math.random() * 10),
+                costly: Math.floor(2 + Math.random() * 8),
+            };
+        });
+        return { days: generatedDays, hourlyData: generatedHourly, sentimentTrend: sTrend };
+    }, []);
+
+    // ── Pre-compute aggregate blocks so they don't re-run every simple render ──
+    const byAssistant = React.useMemo(() => {
+        return assistants.map(a => {
+            const acalls = calls.filter(c => c.assistantId === a.id);
+            const dur = acalls.reduce((acc, c) => acc + c.duration, 0);
+            return {
+                name: a.name,
+                calls: acalls.length,
+                minutes: Math.floor(dur / 60),
+                cost: acalls.reduce((acc, c) => acc + c.cost, 0),
+            };
+        }).sort((a, b) => b.calls - a.calls).slice(0, 6);
+    }, [assistants, calls]);
+
+    const pieData = React.useMemo(() => [
+        { name: 'Completed', value: calls.filter(c => c.status === 'ended').length },
+        { name: 'Failed', value: calls.filter(c => c.status === 'failed').length },
+        { name: 'Missed/Voicemail', value: calls.filter(c => ['busy', 'no-answer'].includes(c.status)).length },
+    ], [calls]);
+
+    const successRate = React.useMemo(() => {
+        const completed = calls.filter(c => c.status === 'ended').length;
+        return calls.length > 0 ? (completed / calls.length) * 100 : 0;
+    }, [calls]);
+
     const totalMinutes = Math.round(calls.reduce((a, c) => a + c.duration / 60, 0));
     const avgDuration = Math.round(calls.filter(c => c.duration > 0).reduce((a, c) => a + c.duration, 0) / Math.max(1, calls.filter(c => c.duration > 0).length));
-    const successRate = +(calls.filter(c => c.successEval === true).length / Math.max(1, calls.filter(c => c.successEval !== undefined).length) * 100).toFixed(1);
     const totalCost = calls.reduce((a, c) => a + c.cost, 0);
-
-    const pieData = [
-        { name: 'Ended', value: calls.filter(c => c.status === 'ended').length },
-        { name: 'Failed', value: calls.filter(c => c.status === 'failed').length },
-        { name: 'No Answer', value: calls.filter(c => c.status === 'no-answer' || c.status === 'busy').length },
-    ];
-
-    const byAssistant = assistants.map(a => ({
-        name: a.name.length > 16 ? a.name.slice(0, 16) + '…' : a.name,
-        calls: a.callCount,
-    })).sort((a, b) => b.calls - a.calls).slice(0, 6);
 
     return (
         <div className="space-y-5">
@@ -308,7 +323,7 @@ export function AnalyticsPage() {
                 <KpiCard title="Total Calls" value={calls.length.toLocaleString()} icon={PhoneCall} color="#6366f1" sub="+12% vs prior period" />
                 <KpiCard title="Total Minutes" value={totalMinutes.toLocaleString()} icon={Clock} color="#22c55e" sub="+8% vs prior period" />
                 <KpiCard title="Avg Duration" value={`${avgDuration}s`} icon={TrendingUp} color="#f59e0b" sub="Per completed call" />
-                <KpiCard title="Success Rate" value={`${successRate}%`} icon={CheckCircle} color="#10b981" sub="Of evaluated calls" />
+                <KpiCard title="Success Rate" value={`${successRate.toFixed(1)}%`} icon={CheckCircle} color="#10b981" sub="Of evaluated calls" />
                 <KpiCard title="Total Cost" value={`$${totalCost.toFixed(2)}`} icon={DollarSign} color="#8b5cf6" sub="This period" />
             </div>
 
@@ -374,13 +389,12 @@ export function AnalyticsPage() {
                 </div>
             </div>
 
-            <HeatmapGrid />
+            <HeatmapGrid hourlyData={hourlyData} />
 
             {/* ── Sentiment Analysis ─────────────────────────────────────────── */}
             <div className="border-t border-border pt-5">
-                <SentimentAnalysis totalCalls={calls.length} />
+                <SentimentAnalysis totalCalls={calls.length} sentimentTrend={sentimentTrend} />
             </div>
         </div>
     );
 }
-

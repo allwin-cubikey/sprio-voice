@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sidebar } from './layout/Sidebar';
 import { TopBar } from './layout/TopBar';
@@ -8,6 +8,7 @@ import { CommandPalette } from './ui/CommandPalette';
 import { OutboundCallModal } from './OutboundCallModal';
 
 export function AppLayout() {
+    const location = useLocation();
     return (
         <div className="flex h-screen overflow-hidden bg-background">
             <Sidebar />

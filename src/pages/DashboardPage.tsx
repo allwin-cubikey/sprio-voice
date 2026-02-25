@@ -10,7 +10,6 @@ import { format } from 'date-fns';
 import { Badge, Skeleton } from '@/components/ui/index';
 import { clsx } from 'clsx';
 
-const { days: chartData } = generateAnalyticsData();
 
 function SparklineChart({ data, color }: { data: number[]; color: string }) {
     const chartItems = data.map((v, i) => ({ v }));
@@ -70,15 +69,23 @@ export function DashboardPage() {
     const { assistants } = useAssistantStore();
     const { phoneNumbers } = usePhoneNumberStore();
 
-    const stats = useMemo(() => {
+    const { chartData, stats, sparkData, minuteSpark } = useMemo(() => {
+        const { days } = generateAnalyticsData();
         const totalMinutes = calls.reduce((a, c) => a + Math.floor(c.duration / 60), 0);
         const activeAssistants = assistants.filter(a => a.status === 'active').length;
         const activeNumbers = phoneNumbers.filter(p => p.status === 'active').length;
-        return { totalCalls: calls.length, totalMinutes, activeAssistants, activeNumbers };
+        const totalCost = calls.reduce((a, c) => a + c.cost, 0);
+        const durationCalls = calls.filter(c => c.duration > 0);
+        const avgDuration = durationCalls.length > 0
+            ? Math.round(durationCalls.reduce((a, c) => a + c.duration, 0) / durationCalls.length)
+            : 0;
+        return {
+            chartData: days,
+            stats: { totalCalls: calls.length, totalMinutes, activeAssistants, activeNumbers, totalCost, avgDuration },
+            sparkData: days.slice(-10).map(d => d.calls),
+            minuteSpark: days.slice(-10).map(d => d.minutes),
+        };
     }, [calls, assistants, phoneNumbers]);
-
-    const sparkData = useMemo(() => chartData.slice(-10).map(d => d.calls), []);
-    const minuteSpark = useMemo(() => chartData.slice(-10).map(d => d.minutes), []);
 
     return (
         <div className="space-y-6">
@@ -165,7 +172,7 @@ export function DashboardPage() {
                     <div className="mt-auto pt-3 border-t border-border space-y-2">
                         <div className="flex items-center justify-between text-xs">
                             <span className="text-text-muted">This month's cost</span>
-                            <span className="text-text-primary font-medium">${calls.reduce((a, c) => a + c.cost, 0).toFixed(2)}</span>
+                            <span className="text-text-primary font-medium">${stats.totalCost.toFixed(2)}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                             <span className="text-text-muted">Success rate</span>
@@ -173,9 +180,7 @@ export function DashboardPage() {
                         </div>
                         <div className="flex items-center justify-between text-xs">
                             <span className="text-text-muted">Avg duration</span>
-                            <span className="text-text-primary font-medium">
-                                {Math.round(calls.filter(c => c.duration > 0).reduce((a, c) => a + c.duration, 0) / Math.max(1, calls.filter(c => c.duration > 0).length))}s
-                            </span>
+                            <span className="text-text-primary font-medium">{stats.avgDuration}s</span>
                         </div>
                     </div>
                 </div>

@@ -10,6 +10,7 @@ import { AdminAssistantsPage } from './admin/pages/AdminAssistantsPage';
 import { AdminCallsPage } from './admin/pages/AdminCallsPage';
 import { AdminBillingPage } from './admin/pages/AdminBillingPage';
 import { AdminSystemPage } from './admin/pages/AdminSystemPage';
+import { AdminAnalyticsPage } from './admin/pages/AdminAnalyticsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { AssistantListPage } from './pages/assistants/AssistantListPage';
 import { AssistantEditorPage } from './pages/assistants/AssistantEditorPage';
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/admin/assistants" element={<AdminAssistantsPage />} />
           <Route path="/admin/calls" element={<AdminCallsPage />} />
           <Route path="/admin/billing" element={<AdminBillingPage />} />
+          <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
           <Route path="/admin/system" element={<AdminSystemPage />} />
         </Route>
 

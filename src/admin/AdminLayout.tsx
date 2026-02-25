@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Building2, Bot, PhoneCall,
     CreditCard, Settings, LogOut, ChevronLeft, ChevronRight,
-    Bell, AlertTriangle, Activity,
+    Bell, AlertTriangle, Activity, BarChart2,
 } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { clsx } from 'clsx';
@@ -16,6 +16,7 @@ const navItems = [
     { label: 'Assistants', icon: Bot, path: '/admin/assistants' },
     { label: 'Calls', icon: PhoneCall, path: '/admin/calls' },
     { label: 'Billing & Revenue', icon: CreditCard, path: '/admin/billing' },
+    { label: 'Analytics', icon: BarChart2, path: '/admin/analytics' },
     { label: 'System', icon: Settings, path: '/admin/system' },
 ];
 

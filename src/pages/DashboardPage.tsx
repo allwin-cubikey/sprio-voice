@@ -93,7 +93,6 @@ export function DashboardPage() {
             <div className="card px-4 py-3 flex items-center gap-3 border-green-800/30 bg-success/5">
                 <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
                 <span className="text-sm text-text-secondary">All systems operational — No incidents</span>
-                <a href="/docs" className="ml-auto text-xs text-accent hover:underline">Status page</a>
             </div>
 
             {/* Stats Row */}

@@ -99,7 +99,7 @@ export function PhoneNumbersPage() {
             ) : (
                 <div className="table-container">
                     <table className="table">
-                        <thead><tr><th>Number</th><th>Label</th><th>Provider</th><th>Assigned Assistant</th><th>Inbound</th><th>Outbound</th><th>Cost/mo</th><th>Status</th><th></th></tr></thead>
+                        <thead><tr><th>Number</th><th>Label</th><th>Assigned Assistant</th><th>Inbound</th><th>Outbound</th><th>Cost/mo</th><th>Status</th><th></th></tr></thead>
                         <tbody>
                             {phoneNumbers.map(pn => {
                                 const asst = getAssistant(pn.assignedAssistantId);
@@ -107,7 +107,6 @@ export function PhoneNumbersPage() {
                                     <tr key={pn.id} onClick={() => navigate(`/phone-numbers/${pn.id}`)} className="cursor-pointer">
                                         <td className="font-mono text-sm text-text-primary">{pn.number}</td>
                                         <td>{pn.label}</td>
-                                        <td className="capitalize">{pn.provider}</td>
                                         <td>
                                             {asst ? (
                                                 <div className="flex items-center gap-1.5">

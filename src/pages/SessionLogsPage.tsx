@@ -49,7 +49,13 @@ export function SessionLogsPage() {
         return true;
     }).filter(s =>
         search === '' || s.id.includes(search) || s.assistantName.toLowerCase().includes(search.toLowerCase())
-    ), [sessions, activeTab, search]);
+    ).filter(s => {
+        if (activeChips.has('Cost') && s.cost === 0) return false;
+        if (activeChips.has('Call Type') && s.type !== 'inbound') return false;
+        if (activeChips.has('Score') && !s.score) return false;
+        if (activeChips.has('Success Evaluation') && s.successEval === null) return false;
+        return true;
+    }), [sessions, activeTab, search, activeChips]);
 
     const tabCounts = {
         'All Calls': sessions.length,

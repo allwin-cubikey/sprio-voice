@@ -61,7 +61,7 @@ function AssistantCard({ assistant, onEdit, onDuplicate, onDelete }: {
 
             <div className="space-y-2">
                 <p className="text-xs text-text-muted line-clamp-2">{assistant.firstMessage}</p>
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border">
                     <div>
                         <p className="text-[10px] text-text-muted">Voice</p>
                         <p className="text-xs text-text-secondary font-medium">{assistant.voiceName}</p>
@@ -73,10 +73,6 @@ function AssistantCard({ assistant, onEdit, onDuplicate, onDelete }: {
                     <div>
                         <p className="text-[10px] text-text-muted">Last Active</p>
                         <p className="text-xs text-text-secondary font-medium">{format(new Date(assistant.lastActive), 'MMM d')}</p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-text-muted">Transcriber</p>
-                        <p className="text-xs text-text-secondary font-medium capitalize">{assistant.transcriberProvider}</p>
                     </div>
                 </div>
             </div>
